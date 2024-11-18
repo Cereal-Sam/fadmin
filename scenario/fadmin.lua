@@ -10,13 +10,13 @@ on_console_chat = function(event)
     -- message rate limiting
     local rate = 5
     local per  = 8 * 60
-    if global.player_data[event.player_index] == nil then
-      global.player_data[event.player_index] = {
+    if storage.player_data[event.player_index] == nil then
+      storage.player_data[event.player_index] = {
         rl_allowance = rate,
         rl_last_check = event.tick
       }
     else
-      local player = global.player_data[event.player_index];
+      local player = storage.player_data[event.player_index];
       local time_passed = event.tick - player.rl_last_check
       player.rl_last_check = event.tick
       player.rl_allowance = player.rl_allowance + time_passed * (rate / per);
@@ -30,7 +30,7 @@ on_console_chat = function(event)
       end
     end
   end
-  table.insert(global.events, {
+  table.insert(storage.events, {
     type = 'chat',
     name = name,
     message = event.message
@@ -38,14 +38,14 @@ on_console_chat = function(event)
 end
 
 on_player_joined_game = function(event)
-  table.insert(global.events, {
+  table.insert(storage.events, {
     type = 'joined',
     name = game.players[event.player_index].name
   })
 end
 
 on_player_left_game = function(event)
-  table.insert(global.events, {
+  table.insert(storage.events, {
     type = 'left',
     name = game.players[event.player_index].name
   })
@@ -59,32 +59,33 @@ on_player_died = function(event)
       cause['player'] = event.cause.player.name
     end
   end
-  table.insert(global.events, {
+  table.insert(storage.events, {
     type = 'died',
     name = game.players[event.player_index].name,
     cause = cause
   })
+  log(game.players[event.player_index].name)
 end
 
 on_chunk_charted = function(event)
-  if not global.spawned_tag then
+  if not storage.spawned_tag then
     local surface = game.surfaces[event.surface_index]
     if surface.name == 'nauvis' and event.position.x == 0 and event.position.y == 0 then
       game.forces['player'].add_chart_tag(surface, {icon={type='virtual', name='signal-info'}, text='https://discord.gg/ZwMvyrs', position={0, 0}})
-      global.spawned_tag = true
+      storage.spawned_tag = true
     end
   end
 end
 
 on_player_promoted = function(event)
-  table.insert(global.events, {
+  table.insert(storage.events, {
     type = 'promoted',
     name = game.players[event.player_index].name
   })
 end
 
 on_player_demoted = function(event)
-  table.insert(global.events, {
+  table.insert(storage.events, {
     type = 'demoted',
     name = game.players[event.player_index].name
   })
@@ -96,7 +97,7 @@ on_player_kicked = function(event)
   else
     by_player = game.players[event.by_player].name
   end
-  table.insert(global.events, {
+  table.insert(storage.events, {
     type = 'kicked',
     name = game.players[event.player_index].name,
     by_player = by_player,
@@ -110,7 +111,7 @@ on_player_banned = function(event)
   else
     by_player = game.players[event.by_player].name
   end
-  table.insert(global.events, {
+  table.insert(storage.events, {
     type = 'banned',
     name = event.player_name,
     by_player = by_player,
@@ -124,7 +125,7 @@ on_player_unbanned = function(event)
   else
     by_player = game.players[event.by_player].name
   end
-  table.insert(global.events, {
+  table.insert(storage.events, {
     type = 'unbanned',
     name = event.player_name,
     by_player = by_player,
@@ -149,9 +150,9 @@ fadmin.events =
 }
 
 fadmin.on_init = function()
-  global.events = {}
-  global.player_data = {}
-  global.spawned_tag = false
+  storage.events = {}
+  storage.player_data = {}
+  storage.spawned_tag = false
 
   local default = game.permissions.get_group('Default')
   default.set_allows_action(defines.input_action.toggle_map_editor, false)
@@ -161,8 +162,6 @@ fadmin.on_init = function()
     jail.set_allows_action(v, false)
   end
   jail.set_allows_action(defines.input_action.write_to_console, true)
-
-  game.forces['player'].research_queue_enabled = true
 end
 
 fadmin.add_commands = function()
@@ -171,8 +170,8 @@ fadmin.add_commands = function()
       parameter = event.parameter == nil and '' or event.parameter
       local res = string.match(parameter, 'poll')
       if res ~= nil then
-        rcon.print(game.table_to_json(global.events))
-        global.events = {}
+        rcon.print(game.table_to_json(storage.events))
+        storage.events = {}
       end
       res = string.match(parameter, 'stats')
       if res ~= nil then
