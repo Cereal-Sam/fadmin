@@ -170,12 +170,12 @@ fadmin.add_commands = function()
       parameter = event.parameter == nil and '' or event.parameter
       local res = string.match(parameter, 'poll')
       if res ~= nil then
-        rcon.print(game.table_to_json(storage.events))
+        rcon.print(helpers.table_to_json(storage.events))
         storage.events = {}
       end
       res = string.match(parameter, 'stats')
       if res ~= nil then
-        rcon.print(game.table_to_json(statistics_exporter.export()))
+        rcon.print(helpers.table_to_json(statistics_exporter.export()))
       end
       res = string.match(parameter, 'chat (.*)')
       if res ~= nil then

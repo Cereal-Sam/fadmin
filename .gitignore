@@ -3,3 +3,4 @@ __pycache__
 fadmin.egg-info
 pip-wheel-metadata
 server
+.vscode
